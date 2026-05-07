@@ -1,0 +1,27 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Methodology — Holy Grail Archive"
+  description="How Holy Grail Archive collects discontinued cosmetics data: brand archives, public sold listings, and Reddit community references."
+>
+  <div class="container narrow">
+    <h1>Methodology</h1>
+    <h2>Discontinued status</h2>
+    <p>A product is marked discontinued when (a) the brand has removed it from its current catalog AND (b) at least one independent source (Reddit thread, archived brand page, or major beauty news outlet) confirms the change.</p>
+    <h2>Resale price data</h2>
+    <p>Sold-listing prices are pulled from public marketplace listings (eBay sold listings, etc.). Unsold listing prices, or asking prices, are excluded.</p>
+    <h2>Successor & dupes</h2>
+    <p>Successor and dupe suggestions cite Reddit threads or brand statements, never personal opinion.</p>
+    <h2>Source policy</h2>
+    <p>Every published product entry must have at least one source URL. Entries with empty <code>sources</code> remain in draft and are not exposed publicly.</p>
+  </div>
+</BaseLayout>
+
+<style>
+  .narrow { max-width: 720px; }
+  h1 { margin: 1.5rem 0 1rem; }
+  h2 { margin-top: 1.5rem; font-size: 1.15rem; }
+  code { background: var(--card); padding: 0.1rem 0.4rem; border-radius: 4px; border: 1px solid var(--border); }
+</style>

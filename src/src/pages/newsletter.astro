@@ -1,0 +1,66 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+const baseUrl = import.meta.env.BASE_URL;
+---
+
+<BaseLayout
+  title="Newsletter — Holy Grail Archive"
+  description="Get the monthly TOP 10 discontinued cosmetics report — free. Resale price moves, restock rumors, and successor product alerts."
+>
+  <div class="container narrow">
+    <h1>Monthly TOP 10 Holy Grails</h1>
+    <p>One email per month. The 10 most-searched discontinued cosmetics, with current resale prices, successor suggestions, and any restock rumors verified from public sources.</p>
+
+    <!-- Buttondown placeholder. Replace action URL after Buttondown account setup. -->
+    <form
+      action="https://buttondown.email/api/emails/embed-subscribe/PLACEHOLDER"
+      method="post"
+      target="popupwindow"
+      onsubmit="window.open('https://buttondown.email/PLACEHOLDER', 'popupwindow');"
+      class="newsletter-form"
+    >
+      <label for="bd-email" class="visually-hidden">Email address</label>
+      <input id="bd-email" type="email" name="email" placeholder="you@example.com" required />
+      <button type="submit">Subscribe</button>
+    </form>
+    <p class="small muted">Free. Unsubscribe anytime. Powered by Buttondown.</p>
+  </div>
+</BaseLayout>
+
+<style>
+  .narrow { max-width: 600px; }
+  h1 { margin: 1.5rem 0 1rem; }
+  .newsletter-form {
+    display: flex;
+    gap: 0.5rem;
+    margin: 1.5rem 0 0.5rem;
+  }
+  .newsletter-form input {
+    flex: 1;
+    padding: 0.65rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 1rem;
+  }
+  .newsletter-form button {
+    background: var(--accent);
+    color: #fff;
+    border: 0;
+    padding: 0.65rem 1.4rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .small { font-size: 0.85rem; }
+  .muted { color: var(--muted); }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    border: 0;
+  }
+</style>

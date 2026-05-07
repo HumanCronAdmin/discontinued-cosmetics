@@ -1,0 +1,118 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const all = await getCollection('products', ({ data }) => !data.draft);
+const products = all.sort((a, b) =>
+  (b.data.discontinued_year ?? 0) - (a.data.discontinued_year ?? 0)
+);
+const baseUrl = import.meta.env.BASE_URL;
+
+const brands = [...new Set(all.map((p) => p.data.brand))].sort();
+const categories = [...new Set(all.map((p) => p.data.category))].sort();
+---
+
+<BaseLayout
+  title="Holy Grail Archive — Discontinued Cosmetics Database"
+  description="Find any discontinued lipstick, eyeshadow, foundation, or fragrance in 3 minutes. Launch year, discontinued year, price history, and successor products — aggregated from public sources."
+>
+  <section class="hero container">
+    <h1>Find any discontinued cosmetic in 3 minutes.</h1>
+    <p class="hero-sub">
+      Launch year. Discontinued year. Resale price history. Successor & dupe suggestions.
+      Aggregated from public marketplaces, Reddit communities, and brand archives.
+    </p>
+    <a href={`${baseUrl}/newsletter`} class="cta">Get Monthly TOP 10 Holy Grails</a>
+  </section>
+
+  <section class="container">
+    <h2>Recently Discontinued</h2>
+    {products.length === 0 ? (
+      <p class="muted">Database is being populated. Check back soon.</p>
+    ) : (
+      <ul class="product-list">
+        {products.map((p) => {
+          const brandSlug = p.data.brand.toLowerCase().replace(/\s+/g, '-');
+          return (
+            <li>
+              <a href={`${baseUrl}/${brandSlug}/${p.data.slug}`}>
+                <span class="prod-brand">{p.data.brand}</span>
+                <span class="prod-name">{p.data.product_name}</span>
+                <span class="prod-meta">
+                  {p.data.category} · Discontinued {p.data.discontinued_year ?? '—'}
+                </span>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    )}
+  </section>
+
+  <section class="container two-col">
+    <div>
+      <h2>Browse by Brand</h2>
+      <ul class="taglist">
+        {brands.map((b) => (
+          <li>
+            <a href={`${baseUrl}/brand/${b.toLowerCase().replace(/\s+/g, '-')}`}>{b}</a>
+          </li>
+        ))}
+      </ul>
+      <p><a href={`${baseUrl}/brands`}>All brands →</a></p>
+    </div>
+    <div>
+      <h2>Browse by Category</h2>
+      <ul class="taglist">
+        {categories.map((c) => (
+          <li>
+            <a href={`${baseUrl}/category/${c}`}>{c}</a>
+          </li>
+        ))}
+      </ul>
+      <p><a href={`${baseUrl}/categories`}>All categories →</a></p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero { text-align: center; padding: 3rem 1rem 2rem; }
+  .hero h1 { font-size: 2rem; margin: 0 0 0.75rem; }
+  .hero-sub { color: var(--muted); max-width: 640px; margin: 0 auto 1.5rem; }
+  h2 { font-size: 1.2rem; margin: 2rem 0 0.75rem; }
+  .product-list { list-style: none; padding: 0; display: grid; gap: 0.5rem; }
+  .product-list a {
+    display: grid;
+    grid-template-columns: 130px 1fr auto;
+    gap: 1rem;
+    padding: 0.85rem 1rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    align-items: center;
+  }
+  .product-list a:hover { border-color: var(--accent); }
+  .prod-brand { font-weight: 600; }
+  .prod-meta { color: var(--muted); font-size: 0.85rem; }
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+  .taglist { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .taglist a {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+  }
+  .taglist a:hover { border-color: var(--accent); }
+  .muted { color: var(--muted); }
+  @media (max-width: 640px) {
+    .two-col { grid-template-columns: 1fr; }
+    .product-list a { grid-template-columns: 1fr; gap: 0.25rem; }
+    .hero h1 { font-size: 1.5rem; }
+  }
+</style>

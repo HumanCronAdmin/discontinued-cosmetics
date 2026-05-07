@@ -1,0 +1,35 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="About — Holy Grail Archive"
+  description="Holy Grail Archive aggregates discontinued cosmetics data from public marketplaces, brand archives, and Reddit communities. Data-only. No reviews, no medical claims."
+>
+  <div class="container narrow">
+    <h1>About Holy Grail Archive</h1>
+    <p>Holy Grail Archive is a data-only aggregator for discontinued cosmetics. We answer one question: <em>did this product really get discontinued, and what is it worth now?</em></p>
+    <h2>What we do</h2>
+    <ul>
+      <li>Collect launch year, discontinued year, and original price from public brand archives.</li>
+      <li>Track resale price history from public sold listings on eBay and other marketplaces.</li>
+      <li>Surface successor and dupe products mentioned in Reddit communities like r/MakeupAddiction.</li>
+    </ul>
+    <h2>What we do NOT do</h2>
+    <ul>
+      <li>We do not write personal reviews. Operator has no cosmetology credentials and no professional makeup background.</li>
+      <li>We do not authenticate products. Buyers must verify authenticity at the point of purchase.</li>
+      <li>We do not give medical, dermatological, or allergy advice.</li>
+    </ul>
+    <h2>Data sourcing</h2>
+    <p>Every published product page lists its sources. Pages without verified sources are kept as drafts and not published.</p>
+  </div>
+</BaseLayout>
+
+<style>
+  .narrow { max-width: 720px; }
+  h1 { margin: 1.5rem 0 1rem; }
+  h2 { margin-top: 1.5rem; font-size: 1.15rem; }
+  ul { padding-left: 1.2rem; }
+  li { margin: 0.35rem 0; }
+</style>

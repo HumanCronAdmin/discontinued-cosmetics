@@ -1,0 +1,145 @@
+---
+export interface Props {
+  title: string;
+  description: string;
+  ogImage?: string;
+  canonical?: string;
+}
+
+const { title, description, ogImage, canonical } = Astro.props;
+const baseUrl = import.meta.env.BASE_URL;
+const siteUrl = `${Astro.site}${baseUrl}`.replace(/\/$/, '');
+const canonicalURL = canonical || new URL(Astro.url.pathname, Astro.site).href;
+const GA4_ID = 'G-PLACEHOLDER'; // Replace after deploy
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    {ogImage && <meta name="twitter:image" content={ogImage} />}
+
+    <!-- GA4 placeholder -->
+    <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`} is:inline></script>
+    <script define:vars={{ GA4_ID }} is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', GA4_ID);
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-row">
+        <a href={`${baseUrl}`} class="logo">Holy Grail Archive</a>
+        <form class="search-form" action={`${baseUrl}/search`} method="get" role="search">
+          <input
+            type="search"
+            name="q"
+            placeholder="Search by brand or product"
+            aria-label="Search products"
+          />
+        </form>
+        <a href={`${baseUrl}/newsletter`} class="cta">Get Monthly TOP 10</a>
+      </div>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>
+          Holy Grail Archive — discontinued cosmetics aggregator. Data from public sources only.
+        </p>
+        <p class="small">
+          <a href={`${baseUrl}/about`}>About</a> ·
+          <a href={`${baseUrl}/methodology`}>Methodology</a> ·
+          <a href={`${baseUrl}/newsletter`}>Newsletter</a>
+        </p>
+      </div>
+    </footer>
+
+    <style is:global>
+      :root {
+        --bg: #fafafa;
+        --card: #ffffff;
+        --text: #1a1a1a;
+        --muted: #6b6b6b;
+        --accent: #c9a961;
+        --chart: #d4a574;
+        --border: #e6e6e6;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      a { color: var(--text); text-decoration: none; }
+      a:hover { color: var(--accent); }
+      .container { max-width: 1100px; margin: 0 auto; padding: 0 1rem; }
+      .site-header {
+        background: var(--card);
+        border-bottom: 1px solid var(--border);
+        padding: 0.85rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+      .header-row { display: flex; align-items: center; gap: 1rem; }
+      .logo { font-weight: 700; font-size: 1.1rem; letter-spacing: 0.02em; }
+      .search-form { flex: 1; }
+      .search-form input {
+        width: 100%;
+        padding: 0.55rem 0.9rem;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--bg);
+        font-size: 0.95rem;
+      }
+      .cta {
+        background: var(--accent);
+        color: #fff !important;
+        padding: 0.55rem 1rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      main { min-height: 60vh; padding: 2rem 0; }
+      .site-footer {
+        border-top: 1px solid var(--border);
+        background: var(--card);
+        padding: 2rem 0;
+        margin-top: 4rem;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      .small { font-size: 0.85rem; }
+      h1, h2, h3 { line-height: 1.25; }
+      @media (max-width: 640px) {
+        .header-row { flex-wrap: wrap; }
+        .search-form { order: 3; flex-basis: 100%; }
+        .cta { font-size: 0.8rem; padding: 0.45rem 0.7rem; }
+      }
+    </style>
+  </body>
+</html>

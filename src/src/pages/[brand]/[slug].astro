@@ -1,0 +1,211 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PriceHistoryChart from '../../components/PriceHistoryChart.astro';
+
+export async function getStaticPaths() {
+  const all = await getCollection('products', ({ data }) => !data.draft);
+  return all.map((p) => ({
+    params: {
+      brand: p.data.brand.toLowerCase().replace(/\s+/g, '-'),
+      slug: p.data.slug,
+    },
+    props: { product: p },
+  }));
+}
+
+const { product } = Astro.props;
+const d = product.data;
+const baseUrl = import.meta.env.BASE_URL;
+
+const title = `${d.brand} ${d.product_name} - Discontinued ${d.discontinued_year ?? ''} | Price History & Successors`;
+const successorTxt = d.successor_product
+  ? `Successor: ${d.successor_product.brand} ${d.successor_product.product}.`
+  : 'No direct successor identified.';
+const priceTxt =
+  d.sold_history && d.sold_history.length > 0
+    ? ` Recent sold: $${d.sold_history[d.sold_history.length - 1].price_usd}.`
+    : '';
+const description = `${d.brand} ${d.product_name} (${d.category}) discontinued ${d.discontinued_year ?? 'year unknown'}. ${successorTxt}${priceTxt}`.slice(0, 160);
+---
+
+<BaseLayout title={title} description={description} ogImage={d.image_url || undefined}>
+  <div class="container product-page">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href={baseUrl}>Home</a> ›
+      <a href={`${baseUrl}/brands`}>Brands</a> ›
+      <a href={`${baseUrl}/brand/${d.brand.toLowerCase().replace(/\s+/g, '-')}`}>{d.brand}</a> ›
+      <a href={`${baseUrl}/category/${d.category}`}>{d.category}</a> ›
+      <span>{d.product_name}</span>
+    </nav>
+
+    <h1>{d.brand} {d.product_name} <span class="discontinued-tag">(Discontinued {d.discontinued_year ?? '—'})</span></h1>
+
+    <div class="product-grid">
+      <div class="product-image">
+        {d.image_url ? (
+          <img src={d.image_url} alt={`${d.brand} ${d.product_name}`} loading="lazy" />
+        ) : (
+          <div class="img-placeholder">Image pending</div>
+        )}
+      </div>
+      <div class="meta-table">
+        <table>
+          <tbody>
+            <tr><th>Brand</th><td>{d.brand}</td></tr>
+            <tr><th>Product</th><td>{d.product_name}</td></tr>
+            <tr><th>Category</th><td>{d.category}</td></tr>
+            <tr><th>Launched</th><td>{d.launched_year ?? '—'}</td></tr>
+            <tr><th>Discontinued</th><td>{d.discontinued_year ?? '—'}</td></tr>
+            <tr><th>Original Price</th><td>{d.original_price_usd ? `$${d.original_price_usd}` : '—'}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <h2>Price History</h2>
+    <PriceHistoryChart history={d.sold_history} id={d.slug} />
+
+    <h2>Recent Sold Listings</h2>
+    {d.sold_history && d.sold_history.length > 0 ? (
+      <table class="sold-table">
+        <thead>
+          <tr><th>Date</th><th>Platform</th><th>Price (USD)</th><th>Link</th></tr>
+        </thead>
+        <tbody>
+          {d.sold_history.slice().reverse().map((s) => (
+            <tr>
+              <td>{s.date}</td>
+              <td>{s.platform}</td>
+              <td>${s.price_usd}</td>
+              <td><a href={s.url} target="_blank" rel="noopener nofollow">View</a></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    ) : (
+      <p class="muted">No verified sold listings aggregated yet.</p>
+    )}
+
+    <h2>Successor & Dupes</h2>
+    <p>{successorTxt}</p>
+    {d.dupes && d.dupes.length > 0 && (
+      <ul class="dupes">
+        {d.dupes.map((dp) => <li><strong>{dp.brand}</strong> {dp.product}</li>)}
+      </ul>
+    )}
+
+    {d.reddit_mentions && d.reddit_mentions.length > 0 && (
+      <>
+        <h2>Reddit Mentions</h2>
+        <ul class="reddit-links">
+          {d.reddit_mentions.slice(0, 5).map((u) => (
+            <li><a href={u} target="_blank" rel="noopener nofollow">{u}</a></li>
+          ))}
+        </ul>
+      </>
+    )}
+
+    <div class="newsletter-cta">
+      <h3>Don't miss the next holy grail rediscovered.</h3>
+      <p>Get the monthly TOP 10 discontinued cosmetics report — free.</p>
+      <a href={`${baseUrl}/newsletter`} class="cta">Subscribe</a>
+    </div>
+
+    <div class="premium-cta">
+      <button disabled aria-disabled="true">Track this product (coming soon)</button>
+    </div>
+
+    {d.sources && d.sources.length > 0 && (
+      <section class="sources">
+        <h3>Sources</h3>
+        <ul>
+          {d.sources.map((s) => <li><a href={s} target="_blank" rel="noopener nofollow">{s}</a></li>)}
+        </ul>
+      </section>
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+  .product-page { max-width: 900px; }
+  .breadcrumb { font-size: 0.85rem; color: var(--muted); margin-bottom: 1rem; }
+  .breadcrumb a { color: var(--muted); }
+  .breadcrumb a:hover { color: var(--accent); }
+  h1 { font-size: 1.85rem; margin: 0.2rem 0 1.5rem; }
+  .discontinued-tag { color: var(--muted); font-weight: 400; font-size: 1.1rem; }
+  .product-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .product-image img { width: 100%; height: auto; border-radius: 6px; }
+  .img-placeholder {
+    background: var(--bg);
+    border: 1px dashed var(--border);
+    color: var(--muted);
+    aspect-ratio: 1/1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+  }
+  .meta-table table { width: 100%; border-collapse: collapse; }
+  .meta-table th, .meta-table td {
+    text-align: left;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.95rem;
+  }
+  .meta-table th { color: var(--muted); font-weight: 500; width: 40%; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; margin-bottom: 0.75rem; }
+  .sold-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .sold-table th, .sold-table td {
+    padding: 0.6rem 0.85rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+  }
+  .sold-table th { background: var(--bg); font-weight: 600; }
+  .muted { color: var(--muted); }
+  .dupes, .reddit-links, .sources ul { padding-left: 1.2rem; }
+  .dupes li, .reddit-links li, .sources li { margin: 0.25rem 0; }
+  .newsletter-cta {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    padding: 1.25rem 1.5rem;
+    border-radius: 8px;
+    margin: 2.5rem 0 1rem;
+  }
+  .newsletter-cta h3 { margin: 0 0 0.4rem; }
+  .newsletter-cta p { margin: 0 0 1rem; color: var(--muted); }
+  .premium-cta { margin: 1rem 0 2rem; }
+  .premium-cta button {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 0.6rem 1.1rem;
+    border-radius: 6px;
+    cursor: not-allowed;
+    font-size: 0.9rem;
+  }
+  .sources { font-size: 0.85rem; color: var(--muted); margin-top: 2rem; }
+  .sources a { color: var(--muted); word-break: break-all; }
+  @media (max-width: 640px) {
+    .product-grid { grid-template-columns: 1fr; gap: 1rem; padding: 1rem; }
+    h1 { font-size: 1.4rem; }
+  }
+</style>

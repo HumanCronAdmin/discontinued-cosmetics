@@ -1,0 +1,54 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const all = await getCollection('products', ({ data }) => !data.draft);
+const baseUrl = import.meta.env.BASE_URL;
+
+const map = new Map<string, number>();
+for (const p of all) {
+  map.set(p.data.category, (map.get(p.data.category) ?? 0) + 1);
+}
+const categories = [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+---
+
+<BaseLayout
+  title="All Categories — Holy Grail Archive"
+  description="Browse discontinued cosmetics by category: lipstick, eyeshadow, foundation, fragrance, and more."
+>
+  <div class="container">
+    <h1>All Categories</h1>
+    <ul class="cat-list">
+      {categories.map(([cat, count]) => (
+        <li>
+          <a href={`${baseUrl}/category/${cat}`}>
+            {cat} <span class="count">({count})</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+    {categories.length === 0 && <p class="muted">No categories published yet.</p>}
+  </div>
+</BaseLayout>
+
+<style>
+  h1 { margin: 1rem 0 1.5rem; }
+  .cat-list {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.5rem;
+  }
+  .cat-list a {
+    display: block;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.6rem 0.85rem;
+    text-transform: capitalize;
+  }
+  .cat-list a:hover { border-color: var(--accent); }
+  .count { color: var(--muted); font-size: 0.85rem; }
+  .muted { color: var(--muted); }
+</style>

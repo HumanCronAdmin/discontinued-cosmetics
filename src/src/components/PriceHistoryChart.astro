@@ -1,0 +1,111 @@
+---
+export interface SoldRecord {
+  date: string;
+  platform: string;
+  price_usd: number;
+  url: string;
+}
+export interface Props {
+  history: SoldRecord[];
+  id: string;
+}
+const { history, id } = Astro.props;
+const data = JSON.stringify(history || []);
+---
+
+<div class="chart-wrap">
+  {history.length === 0 ? (
+    <p class="chart-empty">No public sold-listing data yet. Data will appear once aggregated from public marketplaces.</p>
+  ) : (
+    <svg id={`chart-${id}`} class="price-chart" role="img" aria-label="Price history chart"></svg>
+  )}
+</div>
+
+<script type="application/json" id={`chart-data-${id}`} set:html={data} />
+
+<script define:vars={{ id }}>
+  (async () => {
+    const node = document.getElementById(`chart-data-${id}`);
+    if (!node) return;
+    const raw = JSON.parse(node.textContent || '[]');
+    if (!raw || raw.length === 0) return;
+
+    const d3 = await import('https://cdn.jsdelivr.net/npm/d3@7/+esm');
+
+    const data = raw
+      .map((r) => ({ date: new Date(r.date), price: +r.price_usd, platform: r.platform }))
+      .sort((a, b) => a.date - b.date);
+
+    const svg = d3.select(`#chart-${id}`);
+    const container = svg.node().parentNode;
+    const width = container.getBoundingClientRect().width;
+    const height = 280;
+    const margin = { top: 20, right: 20, bottom: 40, left: 50 };
+
+    svg.attr('viewBox', `0 0 ${width} ${height}`).attr('width', '100%').attr('height', height);
+
+    const x = d3
+      .scaleTime()
+      .domain(d3.extent(data, (d) => d.date))
+      .range([margin.left, width - margin.right]);
+    const y = d3
+      .scaleLinear()
+      .domain([0, d3.max(data, (d) => d.price) * 1.1])
+      .range([height - margin.bottom, margin.top]);
+
+    svg
+      .append('g')
+      .attr('transform', `translate(0,${height - margin.bottom})`)
+      .call(d3.axisBottom(x).ticks(5).tickFormat(d3.timeFormat('%Y-%m')))
+      .selectAll('text')
+      .style('font-size', '11px');
+
+    svg
+      .append('g')
+      .attr('transform', `translate(${margin.left},0)`)
+      .call(d3.axisLeft(y).ticks(5).tickFormat((d) => `$${d}`))
+      .selectAll('text')
+      .style('font-size', '11px');
+
+    const line = d3
+      .line()
+      .x((d) => x(d.date))
+      .y((d) => y(d.price))
+      .curve(d3.curveMonotoneX);
+
+    svg
+      .append('path')
+      .datum(data)
+      .attr('fill', 'none')
+      .attr('stroke', '#d4a574')
+      .attr('stroke-width', 2)
+      .attr('d', line);
+
+    svg
+      .append('g')
+      .selectAll('circle')
+      .data(data)
+      .enter()
+      .append('circle')
+      .attr('cx', (d) => x(d.date))
+      .attr('cy', (d) => y(d.price))
+      .attr('r', 4)
+      .attr('fill', '#c9a961');
+  })();
+</script>
+
+<style>
+  .chart-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1.5rem 0;
+  }
+  .chart-empty {
+    color: var(--muted);
+    font-style: italic;
+    margin: 1rem 0;
+  }
+  .price-chart { display: block; width: 100%; }
+</style>
