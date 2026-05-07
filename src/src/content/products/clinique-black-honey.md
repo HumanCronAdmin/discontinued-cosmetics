@@ -5,7 +5,7 @@ slug: clinique-black-honey
 category: lipstick
 launched_year: 1971
 discontinued_year: null
-original_price_usd: 21.00
+original_price_usd: 21.0
 sold_history: []
 successor_product: null
 dupes: []

@@ -15,11 +15,23 @@ import urllib.request
 from _helpers import secret, all_products, read_product, write_product, add_unique
 
 DEFAULT_URL = "https://www.esteelauder.com/customer-service/gone-but-not-forgotten"
+WAYBACK_API = "https://archive.org/wayback/available?url={url}"
+WAYBACK_LATEST = "https://web.archive.org/web/{ts}/{url}"
+
+
+BROWSER_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Encoding": "identity",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+}
 
 
 def _fetch(url: str) -> str | None:
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        req = urllib.request.Request(url, headers=BROWSER_HEADERS)
         with urllib.request.urlopen(req, timeout=20) as r:
             return r.read().decode("utf-8", errors="ignore")
     except Exception as e:
@@ -27,11 +39,40 @@ def _fetch(url: str) -> str | None:
         return None
 
 
+def _fetch_via_wayback(target_url: str) -> tuple[str | None, str | None]:
+    """Get latest Wayback snapshot of target URL. Returns (html, snapshot_url)."""
+    import json
+    try:
+        api = WAYBACK_API.format(url=urllib.parse.quote(target_url, safe=""))
+        req = urllib.request.Request(api, headers=BROWSER_HEADERS)
+        with urllib.request.urlopen(req, timeout=20) as r:
+            data = json.loads(r.read().decode("utf-8"))
+        snap = data.get("archived_snapshots", {}).get("closest", {})
+        if not snap.get("available"):
+            return None, None
+        snap_url = snap.get("url")
+        if not snap_url:
+            return None, None
+        req2 = urllib.request.Request(snap_url, headers=BROWSER_HEADERS)
+        with urllib.request.urlopen(req2, timeout=30) as r:
+            return r.read().decode("utf-8", errors="ignore"), snap_url
+    except Exception as e:
+        print(f"[WARN] Wayback fetch: {e}")
+        return None, None
+
+
 def main() -> int:
     url = secret("ESTEE_GBNF_URL") or DEFAULT_URL
     html = _fetch(url)
+    source_url = url
     if not html:
-        print("[SKIP] GBNF page unreachable.")
+        print("[INFO] direct GBNF blocked. Trying Wayback Machine...")
+        html, snap_url = _fetch_via_wayback(url)
+        if html and snap_url:
+            source_url = snap_url
+            print(f"[OK] Wayback snapshot: {snap_url}")
+    if not html:
+        print("[SKIP] GBNF page unreachable (direct + wayback).")
         return 0
     try:
         from bs4 import BeautifulSoup  # type: ignore
@@ -56,7 +97,7 @@ def main() -> int:
         m = re.search(r"discontinued[^0-9]{0,20}(19|20)\d{2}", window) or re.search(r"(19|20)\d{2}", window)
         srcs = list(fm.get("sources") or [])
         changed = False
-        if add_unique(srcs, url):
+        if add_unique(srcs, source_url):
             fm["sources"] = srcs
             changed = True
         if m and not fm.get("discontinued_year"):

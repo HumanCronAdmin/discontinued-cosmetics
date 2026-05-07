@@ -8,9 +8,7 @@ missing (no error, no writes).
 
 | Key | Used by | Required? |
 |---|---|---|
-| `REDDIT_CLIENT_ID` | reddit_makeupaddiction.py | yes for Reddit step |
-| `REDDIT_CLIENT_SECRET` | reddit_makeupaddiction.py | yes for Reddit step |
-| `REDDIT_USER_AGENT` | reddit_makeupaddiction.py | optional (default: discontinued-cosmetics/0.1) |
+| (Reddit: no key needed — uses public JSON endpoint, matches existing pipeline) | reddit_makeupaddiction.py | — |
 | `EBAY_APP_ID` | ebay_sold.py | yes for eBay step |
 | `EBAY_CERT_ID` | ebay_sold.py | yes for eBay step |
 | `EBAY_OAUTH_TOKEN` | ebay_sold.py | optional (skips token fetch if set) |
@@ -23,7 +21,7 @@ Secrets are read via `Claude-Workspace/scripts/vault.py:get_secret(key)`.
 ## Install
 
 ```bash
-pip install praw beautifulsoup4 pyyaml
+pip install beautifulsoup4 pyyaml
 ```
 
 ## Run
